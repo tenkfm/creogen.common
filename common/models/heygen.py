@@ -77,7 +77,7 @@ class HeygenVideoGenerationRequest(BaseModel):
 
         return json
     
-    def __round_up_to_next_even(n):
+    def __round_up_to_next_even(self, n):
         return math.ceil(n / 2) * 2
 
 class HeygenVideoGenerationData(BaseModel):
