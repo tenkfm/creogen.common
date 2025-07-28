@@ -1,3 +1,4 @@
+import math
 from pydantic import BaseModel
 from typing import List, Optional
 from common.models.project import ProjectGen
@@ -69,12 +70,15 @@ class HeygenVideoGenerationRequest(BaseModel):
             ],
             "callback_id": None,
             "dimension": {
-                "width": self.width,
-                "height": self.height
+                "width": self.__round_up_to_next_even(self.width),
+                "height": self.__round_up_to_next_even(self.height)
             }
         }
 
         return json
+    
+    def __round_up_to_next_even(n):
+        return math.ceil(n / 2) * 2
 
 class HeygenVideoGenerationData(BaseModel):
     video_id: str
