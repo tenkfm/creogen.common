@@ -16,39 +16,81 @@ class Project(FirebaseObject):
 class AssetType(str, Enum):
     image = "image"
     video = "video"
+    audio = "audio"
+    video_reading = "video_reading"
+    audio_reading = "audio_reading"
 
 
 class Asset(FirebaseObject):
     user_id: str = None
     project_id: str = None
     name: str
+    path: str
     type: AssetType
     
     @staticmethod
     def collection_name():
         return "assets"
     
+    
+class Script(FirebaseObject):
+    user_id: str
+    project_id: str
+    name: str
+    language: str
+    content: str
+    
+    @staticmethod
+    def collection_name():
+        return "scripts"
+    
+
+class ReadingType(str, Enum):
+    voice = "voice"
+    video = "video"
+
+
+class ReadingStatus(str, Enum):
+    new = "new"
+    generating = "generating"
+    done = "done"
+    error = "error"
+    
+
+class ReadingAvatarPlatform(str, Enum):
+    heygen = "heygen"
+
+
+class ReadingAvatarInfo(BaseModel):
+    platform: ReadingAvatarPlatform = ReadingAvatarPlatform.heygen
+    avatar_id: str
+    avatar_name: Optional[str] = None
+    preview_image_url: Optional[str] = None
+    avatar_video_id: Optional[str] = None
+
+    
+class Reading(FirebaseObject):
+    user_id: str
+    project_id: str
+    script: Script
+    type: ReadingType
+    info: Optional[ReadingAvatarInfo] = None
+    status: ReadingStatus = ReadingStatus.new
+    error: Optional[str] = None
+    asset: Optional[Asset] = None
+    
+    @staticmethod
+    def collection_name():
+        return "readings"
+
 
 class GenerationPhase(str, Enum):
     new = "new"
-    generating_avatar = "generating_avatar"
     start_video_generating = "start_video_generating"
     subtitles_generating = "subtitles_generating"
     footages_creating = "footages_creating"
     video_rendering = "video_rendering"
     done = "done"
-
-
-class GenAvatarPlatform(str, Enum):
-    heygen = "heygen"
-
-
-class GenAvatarInfo(BaseModel):
-    platform: GenAvatarPlatform = GenAvatarPlatform.heygen
-    avatar_id: str
-    avatar_name: Optional[str] = None
-    preview_image_url: Optional[str] = None
-    avatar_video_id: Optional[str] = None
 
 
 class GenRatio(str, Enum):
@@ -70,16 +112,15 @@ class GenTemplate(str, Enum):
 
 
 class ProjectGen(FirebaseObject):
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
     title: str
     ratio: GenRatio
     template: GenTemplate
-    user_id: Optional[str] = None
-    project_id: Optional[str] = None
     phase: GenerationPhase = GenerationPhase.new
     start_time: Optional[str] = None
     end_time: Optional[str] = None
-    avatar: Optional[GenAvatarInfo] = None
-    script: Optional[str] = None
+    script: Script
     configuration: Optional[dict] = None
 
     task_id: Optional[str] = None
@@ -89,4 +130,4 @@ class ProjectGen(FirebaseObject):
 
     @staticmethod
     def collection_name():
-        return "project_generations"
+        return "gens"
