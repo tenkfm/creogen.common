@@ -82,18 +82,18 @@ class Reading(FirebaseObject):
     @staticmethod
     def collection_name():
         return "readings"
-
-
-class GenerationPhase(str, Enum):
+    
+    
+class PublicationPhase(str, Enum):
     new = "new"
-    start_video_generating = "start_video_generating"
-    subtitles_generating = "subtitles_generating"
-    footages_creating = "footages_creating"
-    video_rendering = "video_rendering"
+    preparing_assets = "preparing_assets"
+    creating_subtitles = "creating_subtitles"
+    generating = "generating"
     done = "done"
+    error = "error"
 
 
-class GenRatio(str, Enum):
+class PublicationRatio(str, Enum):
     _9X16 = "9x16"
     _1x1 = "1x1"
 
@@ -103,25 +103,25 @@ class GenRatio(str, Enum):
     
     @property
     def height(self) -> int:
-        return 1280 if self == GenRatio._9X16 else 720
+        return 1280 if self == PublicationRatio._9X16 else 720
 
 
-class GenTemplate(str, Enum):
+class PublicationTemplate(str, Enum):
     frames_stepper = "frames_stepper"
-    chroma_stepper = "chroma_stepper"
 
 
-class ProjectGen(FirebaseObject):
+class Publication(FirebaseObject):
     user_id: Optional[str] = None
     project_id: Optional[str] = None
-    title: str
-    ratio: GenRatio
-    template: GenTemplate
-    phase: GenerationPhase = GenerationPhase.new
+    script_id: str
+    ratio: PublicationRatio
+    template: PublicationTemplate
+    phase: PublicationPhase = PublicationPhase.new
     start_time: Optional[str] = None
     end_time: Optional[str] = None
-    script: Script
     configuration: Optional[dict] = None
+    assets: list[str] = Field(default_factory=list)
+    readings: list[str] = Field(default_factory=list)
 
     task_id: Optional[str] = None
 
@@ -130,4 +130,4 @@ class ProjectGen(FirebaseObject):
 
     @staticmethod
     def collection_name():
-        return "gens"
+        return "publications"
