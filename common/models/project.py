@@ -22,8 +22,8 @@ class AssetType(str, Enum):
 
 
 class Asset(FirebaseObject):
-    user_id: str = None
-    project_id: str = None
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
     name: str
     path: str
     type: AssetType
@@ -34,8 +34,8 @@ class Asset(FirebaseObject):
     
     
 class Script(FirebaseObject):
-    user_id: str
-    project_id: str
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
     name: str
     language: str
     content: str
@@ -70,11 +70,11 @@ class ReadingAvatarInfo(BaseModel):
 
     
 class Reading(FirebaseObject):
-    user_id: str
-    project_id: str
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
     script: Script
     type: ReadingType
-    info: Optional[ReadingAvatarInfo] = None
+    info: ReadingAvatarInfo
     status: ReadingStatus = ReadingStatus.new
     error: Optional[str] = None
     asset: Optional[Asset] = None
