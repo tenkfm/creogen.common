@@ -72,7 +72,7 @@ class ReadingAvatarInfo(BaseModel):
 class Reading(FirebaseObject):
     user_id: Optional[str] = None
     project_id: Optional[str] = None
-    script: Script
+    script_id: Optional[str] = None
     type: ReadingType
     info: ReadingAvatarInfo
     status: ReadingStatus = ReadingStatus.new
