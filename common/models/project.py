@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from common.services.firebase.firebase_object import FirebaseObject
 
@@ -53,6 +53,7 @@ class ReadingType(str, Enum):
 class ReadingStatus(str, Enum):
     new = "new"
     generating = "generating"
+    postprocessing = "postprocessing"
     done = "done"
     error = "error"
     
@@ -77,8 +78,8 @@ class Reading(FirebaseObject):
     info: ReadingAvatarInfo
     status: ReadingStatus = ReadingStatus.new
     error: Optional[str] = None
-    asset: Optional[Asset] = None
-    
+    asset: List[Asset] = []
+
     @staticmethod
     def collection_name():
         return "readings"
