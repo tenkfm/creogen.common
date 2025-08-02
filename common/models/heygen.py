@@ -1,7 +1,6 @@
 import math
 from pydantic import BaseModel
 from typing import List, Optional
-from common.models.project import ProjectGen
 
 # Domain model for Heygen API responses
 
