@@ -28,18 +28,16 @@ class HeygenVideoGenerationRequest(BaseModel):
     title: str
     avatar_id: str
     script: str
-    ratio: str # 9x16, 1x1
     background_type: Optional[str] = None # "image", "video", "color"
     background_value: Optional[str] = None # URL for image and video background or color value for color background
     width: int
     height: int
 
-    def __init__(self, gen: ProjectGen, width: int, height: int):
+    def __init__(self, title: str, avatar_id: str, script: str, width: int, height: int):
         super().__init__(
-            title=gen.title,
-            avatar_id=gen.avatar.avatar_id,
-            script=gen.script,
-            ratio=gen.ratio.value,  # Assuming size is a ProjectSize enum
+            title=title,
+            avatar_id=avatar_id,
+            script=script,
             background_type=None,
             background_value=None,
             width=width,
