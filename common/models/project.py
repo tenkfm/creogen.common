@@ -78,7 +78,7 @@ class Reading(FirebaseObject):
     info: ReadingAvatarInfo
     status: ReadingStatus = ReadingStatus.new
     error: Optional[str] = None
-    asset: List[Asset] = []
+    assets: List[Asset] = []
 
     @staticmethod
     def collection_name():
