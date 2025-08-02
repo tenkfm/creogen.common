@@ -76,7 +76,7 @@ class Reading(FirebaseObject):
     script_id: Optional[str] = None
     type: ReadingType
     info: ReadingAvatarInfo
-    duration: int
+    duration: Optional[int] = None
     status: ReadingStatus = ReadingStatus.new
     error: Optional[str] = None
     assets: Optional[List[Asset]] = None
