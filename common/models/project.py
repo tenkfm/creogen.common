@@ -142,6 +142,14 @@ class Publication(FirebaseObject):
     
     class Config:
         use_enum_values = True
+        
+    @property
+    def width(self) -> int:
+        return 720
+    
+    @property
+    def height(self) -> int:
+        return 1280 if self.ratio == PublicationRatio._9X16 else 720
 
     @staticmethod
     def collection_name():
