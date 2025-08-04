@@ -28,6 +28,9 @@ class Asset(FirebaseObject):
     path: str
     type: AssetType
     
+    class Config:
+        use_enum_values = True
+    
     @staticmethod
     def collection_name():
         return "assets"
@@ -68,8 +71,11 @@ class ReadingAvatarInfo(BaseModel):
     avatar_name: Optional[str] = None
     preview_image_url: Optional[str] = None
     avatar_video_id: Optional[str] = None
-
     
+    class Config:
+        use_enum_values = True
+    
+
 class Reading(FirebaseObject):
     user_id: Optional[str] = None
     project_id: Optional[str] = None
