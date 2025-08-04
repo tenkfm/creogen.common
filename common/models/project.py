@@ -80,6 +80,9 @@ class Reading(FirebaseObject):
     status: ReadingStatus = ReadingStatus.new
     error: Optional[str] = None
     assets: Optional[List[Asset]] = None
+    
+    class Config:
+        use_enum_values = True
 
     @staticmethod
     def collection_name():
@@ -130,6 +133,9 @@ class Publication(FirebaseObject):
 
     error: Optional[str] = None
     result: Optional[str] = None
+    
+    class Config:
+        use_enum_values = True
 
     @staticmethod
     def collection_name():
