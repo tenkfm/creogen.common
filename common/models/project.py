@@ -119,6 +119,7 @@ class Publication(FirebaseObject):
     ratio: PublicationRatio
     template: PublicationTemplate
     phase: PublicationPhase = PublicationPhase.new
+    create_time: Optional[str] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     configuration: Optional[dict] = None
