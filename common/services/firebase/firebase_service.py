@@ -66,7 +66,7 @@ class FirebaseService(FirebaseServiceInterface):
             # Raise a custom exception if there's an error
             raise FirebaseServiceException(f"Failed to add document to {obj.collection_name()}: {str(e)}")
         
-    def delete(self, model_class: Type[FirebaseObject], document_id: str):
+    def delete(self, model_class: Type[FirebaseObject], docu_id: str):
         """
         Delete an object by its document ID from the specified Firestore collection.
         
@@ -78,7 +78,7 @@ class FirebaseService(FirebaseServiceInterface):
             collection_ref = self.db.collection(model_class.collection_name())
 
             # Get a reference to the document
-            doc_ref = collection_ref.document(document_id)
+            doc_ref = collection_ref.document(docu_id)
 
             # Delete the document
             doc_ref.delete()
