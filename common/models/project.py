@@ -126,6 +126,7 @@ class Publication(FirebaseObject):
     project_id: Optional[str] = None
     script_id: str
     ratio: PublicationRatio
+    number_of_creos: int
     template: PublicationTemplate
     phase: PublicationPhase = PublicationPhase.new
     create_time: Optional[str] = None
