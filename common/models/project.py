@@ -151,6 +151,12 @@ class Publication(FirebaseObject):
     @property
     def height(self) -> int:
         return 1280 if self.ratio == PublicationRatio._9X16 else 720
+    
+    @property
+    def is_ready_to_run(self) -> bool:
+        if self.configuration and len(self.assets) > 0 and len(self.readings) > 0 and self.phase == PublicationPhase.new:
+            return True
+        return False
 
     @staticmethod
     def collection_name():
