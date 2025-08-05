@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from common.services.firebase.firebase_object import FirebaseObject
@@ -157,7 +158,27 @@ class Publication(FirebaseObject):
         if self.configuration and len(self.assets) > 0 and len(self.readings) > 0 and self.phase == PublicationPhase.new:
             return True
         return False
-
+    
+    def clone(self) -> "Publication":
+        """
+        Create a new instance of Publication with the same properties but reset phase and timestamps.
+        """
+        
+        return Publication(
+            user_id=self.user_id,
+            project_id=self.project_id,
+            script_id=self.script_id,
+            ratio=self.ratio,
+            number_of_creos=self.number_of_creos,
+            template=self.template,
+            phase=PublicationPhase.new,
+            create_time=datetime.now().isoformat(),
+            configuration=self.configuration,
+            assets=self.assets,
+            readings=self.readings
+        )
+        
+        
     @staticmethod
     def collection_name():
         return "publications"
