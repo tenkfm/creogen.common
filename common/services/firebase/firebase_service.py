@@ -27,7 +27,7 @@ class FirebaseService(FirebaseServiceInterface):
         # Initialize Firestore client
         self.db = firestore.client()
 
-    def add(self, obj: FirebaseObject) -> str:
+    def add(self, obj: FirebaseObject) -> FirebaseObject:
         """
         Add an object to the specified Firestore collection.
         
