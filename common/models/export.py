@@ -1,13 +1,13 @@
 import io, csv
 from enum import Enum
 from datetime import datetime
-from typing import List, Optional
+from typing import List, ClassVar, Optional
 from pydantic import BaseModel, Field
 from common.services.firebase.firebase_object import FirebaseObject
 
 
 class TTExport(FirebaseObject):
-    ALL_FIELDS = [
+    ALL_FIELDS: ClassVar[List[str]] = [
         "Campaign ID", "Campaign Status", "Campaign Name", "Advertising Objective",
         "Campaign type", "Sales destination", "Use catalog", "Product source",
         "iOS 14 Dedicated Campaign", "App profile page used", "Campaign Budget Type",
