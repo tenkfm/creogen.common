@@ -122,9 +122,24 @@ class PublicationTemplate(str, Enum):
     frames_stepper = "frames_stepper"
 
 
-class PublicationResult(BaseModel):
-    file_names: List[str] = Field(default_factory=list)
-    zip_name: Optional[str] = None
+class PublicationCreativeStatus(str, Enum):
+    new = "new"
+    generating = "generating"
+    error = "error"
+    done = "done"
+
+
+class PublicationCreative(FirebaseObject):
+    publication_id: Optional[str] = None
+    user_id: Optional[str] = None
+    status: PublicationCreativeStatus = PublicationCreativeStatus.new
+    error: Optional[str] = None
+    file_name: Optional[str]
+    
+    @staticmethod
+    def collection_name():
+        return "creatives"
+    
 
 class Publication(FirebaseObject):
     user_id: Optional[str] = None
@@ -142,10 +157,9 @@ class Publication(FirebaseObject):
     readings: list[str] = Field(default_factory=list)
 
     task_id: Optional[str] = None
-
     error: Optional[str] = None
-    result: Optional[PublicationResult] = None
-    
+    result: Optional[str] = None
+
     class Config:
         use_enum_values = True
         
@@ -181,7 +195,6 @@ class Publication(FirebaseObject):
             assets=self.assets,
             readings=self.readings
         )
-        
         
     @staticmethod
     def collection_name():
