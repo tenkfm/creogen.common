@@ -20,7 +20,7 @@ class OpenAIService(OpenaiServiceInterface):
             ],
             temperature=temperature,
             model="deepseek-chat",
-            response_format={"type": "json_object"}
+            response_format="text"
         )
         return chat_completion.choices[0].message.content
 
