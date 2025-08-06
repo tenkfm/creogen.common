@@ -122,6 +122,10 @@ class PublicationTemplate(str, Enum):
     frames_stepper = "frames_stepper"
 
 
+class PublicationResult(BaseModel):
+    file_names: List[str] = Field(default_factory=list)
+    zip_name: Optional[str] = None
+
 class Publication(FirebaseObject):
     user_id: Optional[str] = None
     project_id: Optional[str] = None
@@ -140,7 +144,7 @@ class Publication(FirebaseObject):
     task_id: Optional[str] = None
 
     error: Optional[str] = None
-    result: Optional[str] = None
+    result: Optional[PublicationResult] = None
     
     class Config:
         use_enum_values = True
