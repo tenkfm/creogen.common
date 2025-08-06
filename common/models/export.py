@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 from common.services.firebase.firebase_object import FirebaseObject
 
 class TTExport(FirebaseObject):
+    user_id: Optional[str] = None
+    publication_id: Optional[str] = None
     campaign_name: str
     ad_groups_count: int
     pixel_id: str
