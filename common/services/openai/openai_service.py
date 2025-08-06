@@ -19,8 +19,7 @@ class OpenAIService(OpenaiServiceInterface):
                 {"role": "user", "content": user_prompt}
             ],
             temperature=temperature,
-            model="deepseek-chat",
-            response_format="text"
+            model="deepseek-chat"
         )
         return chat_completion.choices[0].message.content
 
