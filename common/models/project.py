@@ -158,7 +158,7 @@ class Publication(FirebaseObject):
 
     task_id: Optional[str] = None
     error: Optional[str] = None
-    result: Optional[str] = None
+    zip_name: Optional[str] = None
 
     class Config:
         use_enum_values = True
