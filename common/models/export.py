@@ -19,6 +19,7 @@ class TTExport(FirebaseObject):
     text: str
     url: str
     event_name: str
+    file_names: List[str] = Field(default_factory=list)
     
     @staticmethod
     def collection_name():
