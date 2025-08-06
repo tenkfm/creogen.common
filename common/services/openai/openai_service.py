@@ -1,6 +1,6 @@
 import asyncio
 from openai import OpenAI
-from app.services.openai.openai_service_interface import OpenaiServiceInterface
+from common.services.openai.openai_service_interface import OpenaiServiceInterface
 
 class OpenAIService(OpenaiServiceInterface):
 
