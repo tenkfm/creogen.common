@@ -224,7 +224,7 @@ class PublicationStatus(BaseModel):
         if phase == PublicationPhase.new:
             return 0.0
         if phase == PublicationPhase.preparing_assets:
-            return 0.1
+            return 0.05
         if phase in (PublicationPhase.done, PublicationPhase.error):
             return 1.0
         if phase == PublicationPhase.generating:
