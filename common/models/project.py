@@ -1,6 +1,6 @@
 from enum import Enum
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 from common.services.firebase.firebase_object import FirebaseObject
 
@@ -208,3 +208,39 @@ class PublicationStatus(BaseModel):
     creatives_total: int
     creatives_statuses: dict[str, PublicationCreativeStatus] = Field(default_factory=dict)
     progress: float
+    
+    @property
+    def progress(self) -> Dict[str, float]:
+        """
+        Возвращает словарь вида {creative_id: progress},
+        где progress рассчитывается по правилам:
+          - new               → 0.0
+          - preparing_assets  → 0.1
+          - done, error       → 1.0
+          - generating        → 0.1 + (ready/total)*0.9
+        """
+        total = self.creatives_total or 1  # чтобы не делить на ноль
+        ready = self.creatives_ready
+
+        progress_map: Dict[str, float] = {}
+        for cid, status in self.creatives_statuses.items():
+            if self.publication_status == PublicationPhase.new:
+                p = 0.0
+
+            elif self.publication_status == PublicationPhase.preparing_assets:
+                p = 0.1
+
+            elif self.publication_status in (PublicationPhase.done, PublicationPhase.error):
+                p = 1.0
+
+            elif self.publication_status == PublicationPhase.generating:
+                # все креативы получают одинаковый прогресс в генерации
+                p = 0.1 + (ready / total) * 0.9
+
+            else:
+                p = 0.0
+
+            # гарантируем диапазон [0,1]
+            progress_map[cid] = max(0.0, min(1.0, p))
+
+        return progress_map
