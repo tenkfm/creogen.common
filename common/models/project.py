@@ -207,7 +207,6 @@ class PublicationStatus(BaseModel):
     creatives_ready: int
     creatives_total: int
     creatives_statuses: dict[str, PublicationCreativeStatus] = Field(default_factory=dict)
-    progress: float
     
     @property
     def progress(self) -> Dict[str, float]:
