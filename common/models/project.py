@@ -99,7 +99,6 @@ class Reading(FirebaseObject):
 class PublicationPhase(str, Enum):
     new = "new"
     preparing_assets = "preparing_assets"
-    creating_subtitles = "creating_subtitles"
     generating = "generating"
     done = "done"
     error = "error"
@@ -124,6 +123,7 @@ class PublicationTemplate(str, Enum):
 
 class PublicationCreativeStatus(str, Enum):
     new = "new"
+    creating_subtitles = "creating_subtitles"
     generating = "generating"
     error = "error"
     done = "done"
