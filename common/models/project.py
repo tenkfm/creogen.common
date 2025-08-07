@@ -199,3 +199,11 @@ class Publication(FirebaseObject):
     @staticmethod
     def collection_name():
         return "publications"
+    
+    
+class Publication(BaseModel):
+    publication_id: str
+    publication_status: PublicationPhase
+    creatives_ready: int
+    creatives_total: int
+    creatives_statuses: dict[str, PublicationCreativeStatus] = Field(default_factory=dict)
