@@ -25,27 +25,22 @@ class HeygenAvatarsResponse(BaseModel):
 # Voice
 
 class HeygenVoice(BaseModel):
-    """
-    Описывает один голос из ответа HeyGen API /v2/voices.
-    """
     voice_id: str
     language: str
-    gender: Literal["Female", "Male", "unknown"]
+    gender: str
     name: str
-    preview_audio: HttpUrl
+    preview_audio: str
     support_pause: bool
     emotion_support: bool
     support_locale: bool
+    
+class HeygenVoicesData(BaseModel):
+    voices: List[HeygenVoice]
 
 
 class HeygenVoicesResponse(BaseModel):
-    """
-    Модель ответа HeyGen API для GET https://api.heygen.com/v2/voices.
-
-    Поля:
-      - voices: список объектов HeygenVoice
-    """
-    voices: List[HeygenVoice]
+    error: Optional[str] = None
+    data: HeygenVoicesData
 
 
 # Video Generation
