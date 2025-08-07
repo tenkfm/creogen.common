@@ -47,16 +47,18 @@ class HeygenVoicesResponse(BaseModel):
 class HeygenVideoGenerationRequest(BaseModel):
     title: str
     avatar_id: str
+    voice_id: str
     script: str
     background_type: Optional[str] = None # "image", "video", "color"
     background_value: Optional[str] = None # URL for image and video background or color value for color background
     width: int
     height: int
 
-    def __init__(self, title: str, avatar_id: str, script: str, width: int, height: int):
+    def __init__(self, title: str, avatar_id: str, voice_id: str, script: str, width: int, height: int):
         super().__init__(
             title=title,
             avatar_id=avatar_id,
+            voice_id=voice_id,
             script=script,
             background_type=None,
             background_value=None,
@@ -78,7 +80,7 @@ class HeygenVideoGenerationRequest(BaseModel):
                     "voice": {
                         "type": "text",
                         "input_text": self.script,
-                        "voice_id": "2f72ee82b83d4b00af16c4771d611752"
+                        "voice_id": self.voice_id
                     },
                     "background": {
                         "type": "color",
