@@ -209,37 +209,25 @@ class PublicationStatus(BaseModel):
     creatives_statuses: dict[str, PublicationCreativeStatus] = Field(default_factory=dict)
     
     @property
-    def progress(self) -> Dict[str, float]:
+    def progress(self) -> float:
         """
-        Возвращает словарь вида {creative_id: progress},
-        где progress рассчитывается по правилам:
-          - new               → 0.0
-          - preparing_assets  → 0.1
-          - done, error       → 1.0
-          - generating        → 0.1 + (ready/total)*0.9
+        Общий прогресс публикации от 0.0 до 1.0:
+          - new                  → 0.0
+          - preparing_assets     → 0.1
+          - generating           → 0.1 + (готовых/всех) * 0.9
+          - done, error          → 1.0
         """
-        total = self.creatives_total or 1  # чтобы не делить на ноль
+        phase = self.publication_status
+        total = self.creatives_total or 1
         ready = self.creatives_ready
 
-        progress_map: Dict[str, float] = {}
-        for cid, status in self.creatives_statuses.items():
-            if self.publication_status == PublicationPhase.new:
-                p = 0.0
+        if phase == PublicationPhase.new:
+            return 0.0
+        if phase == PublicationPhase.preparing_assets:
+            return 0.1
+        if phase in (PublicationPhase.done, PublicationPhase.error):
+            return 1.0
+        if phase == PublicationPhase.generating:
+            return 0.1 + (ready / total) * 0.9
 
-            elif self.publication_status == PublicationPhase.preparing_assets:
-                p = 0.1
-
-            elif self.publication_status in (PublicationPhase.done, PublicationPhase.error):
-                p = 1.0
-
-            elif self.publication_status == PublicationPhase.generating:
-                # все креативы получают одинаковый прогресс в генерации
-                p = 0.1 + (ready / total) * 0.9
-
-            else:
-                p = 0.0
-
-            # гарантируем диапазон [0,1]
-            progress_map[cid] = max(0.0, min(1.0, p))
-
-        return progress_map
+        return 0.0
