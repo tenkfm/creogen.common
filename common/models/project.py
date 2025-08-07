@@ -211,23 +211,38 @@ class PublicationStatus(BaseModel):
     @property
     def progress(self) -> float:
         """
-        Общий прогресс публикации от 0.0 до 1.0:
+        Общий прогресс от 0.0 до 1.0, с учётом:
           - new                  → 0.0
-          - preparing_assets     → 0.1
-          - generating           → 0.1 + (готовых/всех) * 0.9
+          - preparing_assets     → 0.05
           - done, error          → 1.0
+          - остальные фазы       → сумма за каждый креатив:
+               done               → 1 * (1/total)
+               creating_subtitles → (1/3) * (1/total)
+               generating         → (1/2) * (1/total)
         """
         phase = self.publication_status
-        total = self.creatives_total or 1
-        ready = self.creatives_ready
 
+        # Специальные фазы
         if phase == PublicationPhase.new:
             return 0.0
         if phase == PublicationPhase.preparing_assets:
             return 0.05
         if phase in (PublicationPhase.done, PublicationPhase.error):
             return 1.0
-        if phase == PublicationPhase.generating:
-            return 0.1 + (ready / total) * 0.9
 
-        return 0.0
+        # Общий случай: суммируем вклад по каждому креативу
+        total = self.creatives_total or 1
+        weight = 1.0 / total
+        contrib = 0.0
+
+        for status in self.creatives_statuses.values():
+            if status == PublicationCreativeStatus.done:
+                contrib += weight
+            elif status == PublicationCreativeStatus.creating_subtitles:
+                contrib += weight / 3.0
+            elif status == PublicationCreativeStatus.generating:
+                contrib += weight / 2.0
+            # для других статусов вклад = 0
+
+        # Ограничиваем максимальным 1.0
+        return min(contrib, 1.0)
