@@ -1,6 +1,6 @@
 import math
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, HttpUrl
+from typing import List, Optional, Literal
 
 # Domain model for Heygen API responses
 
@@ -20,6 +20,32 @@ class HeygenAvatarsResponseData(BaseModel):
 
 class HeygenAvatarsResponse(BaseModel):
     data: HeygenAvatarsResponseData
+    
+    
+# Voice
+
+class HeygenVoice(BaseModel):
+    """
+    Описывает один голос из ответа HeyGen API /v2/voices.
+    """
+    voice_id: str
+    language: str
+    gender: Literal["Female", "Male", "unknown"]
+    name: str
+    preview_audio: HttpUrl
+    support_pause: bool
+    emotion_support: bool
+    support_locale: bool
+
+
+class HeygenVoicesResponse(BaseModel):
+    """
+    Модель ответа HeyGen API для GET https://api.heygen.com/v2/voices.
+
+    Поля:
+      - voices: список объектов HeygenVoice
+    """
+    voices: List[HeygenVoice]
 
 
 # Video Generation
