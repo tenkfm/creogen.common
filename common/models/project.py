@@ -201,7 +201,7 @@ class Publication(FirebaseObject):
         return "publications"
     
     
-class Publication(BaseModel):
+class PublicationStatus(BaseModel):
     publication_id: str
     publication_status: PublicationPhase
     creatives_ready: int
