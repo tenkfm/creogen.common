@@ -69,7 +69,7 @@ class ReadingAvatarPlatform(str, Enum):
 class ReadingAvatarInfo(BaseModel):
     platform: ReadingAvatarPlatform = ReadingAvatarPlatform.heygen
     avatar_id: str
-    voice_id: str
+    voice_id: str = "2f72ee82b83d4b00af16c4771d611752" # Default voice ID
     avatar_name: Optional[str] = None
     preview_image_url: Optional[str] = None
     avatar_video_id: Optional[str] = None
