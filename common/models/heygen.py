@@ -29,7 +29,7 @@ class HeygenVoice(BaseModel):
     language: str
     gender: str
     name: str
-    preview_audio: Optional[str] = None      # ← allow null
+    preview_audio: Optional[str] = None
     support_pause: bool
     emotion_support: bool
     support_locale: bool
