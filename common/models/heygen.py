@@ -7,9 +7,9 @@ from typing import List, Optional
 class HeygenAvatar(BaseModel):
     avatar_id: str
     avatar_name: str
-    gender: str
-    preview_image_url: str
-    preview_video_url: str
+    gender: Optional[str] = None
+    preview_image_url: Optional[str] = None
+    preview_video_url: Optional[str] = None
     premium: bool
 
 # API models
