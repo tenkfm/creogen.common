@@ -1,6 +1,6 @@
 import math
 from pydantic import BaseModel, HttpUrl
-from typing import List, Optional, Literal
+from typing import List, Optional
 
 # Domain model for Heygen API responses
 
@@ -29,7 +29,7 @@ class HeygenVoice(BaseModel):
     language: str
     gender: str
     name: str
-    preview_audio: str
+    preview_audio: Optional[str] = None      # ← allow null
     support_pause: bool
     emotion_support: bool
     support_locale: bool
