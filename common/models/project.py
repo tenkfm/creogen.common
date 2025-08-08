@@ -20,6 +20,7 @@ class AssetType(str, Enum):
     audio = "audio"
     video_reading = "video_reading"
     audio_reading = "audio_reading"
+    ass_subtitles = "ass_subtitles"
 
 
 class Asset(FirebaseObject):
