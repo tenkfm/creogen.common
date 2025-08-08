@@ -9,9 +9,9 @@ from common.services.firebase.firebase_object import FirebaseObject
 
 # Firebase service implementation
 class FirebaseService(FirebaseServiceInterface):
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, database_id: str):
         self.db = None
-        self.__initialize(api_key=api_key)
+        self.__initialize(api_key=api_key, database_id=database_id)
 
     def __initialize(self, api_key: str, database_id: str):
         """

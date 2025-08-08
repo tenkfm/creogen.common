@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="creogen-common",
-    version="0.3.32",
+    version="0.3.33",
     packages=find_packages(),  # найдёт папку common/common
     install_requires=[         # List of dependencies
         'firebase-admin',
