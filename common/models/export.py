@@ -131,7 +131,7 @@ class TTExport(FirebaseObject):
         """
         output = io.StringIO()
         output.write('\ufeff')
-        writer = csv.DictWriter(output, fieldnames=self.ALL_FIELDS)
+        writer = csv.DictWriter(output, fieldnames=self.ALL_FIELDS, delimiter=';')
         writer.writeheader()
         for row in rows:
             writer.writerow({field: row.get(field, "") for field in self.ALL_FIELDS})
@@ -158,5 +158,3 @@ class TTExport(FirebaseObject):
     @staticmethod
     def collection_name():
         return "tt_exports"
-    
-    
