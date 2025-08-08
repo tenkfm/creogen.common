@@ -13,7 +13,7 @@ class FirebaseService(FirebaseServiceInterface):
         self.db = None
         self.__initialize(api_key=api_key)
 
-    def __initialize(self, api_key: str):
+    def __initialize(self, api_key: str, database_id: str):
         """
         Initialize Firebase Admin SDK with the service account key from the environment.
         """
@@ -25,7 +25,7 @@ class FirebaseService(FirebaseServiceInterface):
             firebase_admin.initialize_app(cred)
 
         # Initialize Firestore client
-        self.db = firestore.client()
+        self.db = firestore.client(database_id=database_id)
 
     def add(self, obj: FirebaseObject) -> FirebaseObject:
         """
