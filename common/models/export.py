@@ -4,6 +4,7 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta
 from typing import List, ClassVar, Optional
 from pydantic import Field
+from decimal import Decimal, ROUND_HALF_UP
 from common.services.firebase.firebase_object import FirebaseObject
 
 
@@ -150,7 +151,7 @@ class TTExport(FirebaseObject):
             "Device model": "All",
             "Inventory filter": "Full inventory",
             "Ad Group Budget Type": "Daily",
-            "Ad Group Budget Amount": self.budget,
+            "Ad Group Budget Amount": self._fmt_dot(self.budget),
             "Start Time": now_str,
             "End Time": "No Limit",
             "Dayparting": "All Day",
@@ -160,7 +161,7 @@ class TTExport(FirebaseObject):
             "View-through window": "1-day view",
             "Event count": "Every",
             "Bid Strategy": "Cost Cap",
-            "Bid for oCPC/M": bid,
+            "Bid for oCPC/M": self._fmt_dot(bid),
             "Delivery Type": "Standard",
             "Ad Status": "On",
             "Ad Name": ad_name,
@@ -175,6 +176,12 @@ class TTExport(FirebaseObject):
             "Web URL": self.url,
             "TikTok website events": self.event_name,
         }
+        
+        
+    def _fmt_dot(self, x: float, places: int = 2) -> str:
+        # Делаем округление через Decimal и возвращаем строку вида 0.15 (всегда с точкой)
+        q = Decimal(str(x)).quantize(Decimal(10) ** -places, rounding=ROUND_HALF_UP)
+        return format(q, f".{places}f")
     
     def __generate_tiktok_csv(self, rows) -> str:
         """
