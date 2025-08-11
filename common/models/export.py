@@ -69,8 +69,8 @@ class TTExport(FirebaseObject):
         rows = []
         for i in range(self.ad_groups_count):
             row = self.__generate_row(
-                ad_group_name=f"Ad Group {i + 1}",
-                ad_name=f"Ad_{i + 1}",
+                ad_group_name=f"ADG_{i + 1}_{self.id}",
+                ad_name=f"AD_{i + 1}_{self.id}",
                 video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
                 bid=bids[i]
             )
