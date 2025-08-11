@@ -1,9 +1,9 @@
 import io, csv
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, ClassVar, Optional
-from pydantic import BaseModel, Field
+from pydantic import Field
 from common.services.firebase.firebase_object import FirebaseObject
 
 
@@ -51,8 +51,8 @@ class TTExport(FirebaseObject):
         rows = []
         for i in range(self.ad_groups_count):
             row = self.__generate_row(
-                ad_group_name=f"Ad Group {i + 1}",
-                ad_name=f"Ad_{i + 1}",
+                ad_group_name=f"ADG_{i + 1}_{self.id}",
+                ad_name=f"AD_{i + 1}_{self.id}",
                 video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
                 bid=bids[i]
             )
@@ -112,10 +112,10 @@ class TTExport(FirebaseObject):
 
 
     def __generate_row(self, ad_group_name: str, ad_name: str, video_file_name: str, bid: float):
-        now_str = datetime.now().strftime("%Y/%m/%d %H:%M")
+        now_str = (datetime.now() - timedelta(days=1)).strftime("%Y/%m/%d %H:%M")
         return {
             "Campaign Status": "On",
-            "Campaign Name": self.campaign_name,
+            "Campaign Name": f"{self.campaign_name}-{self.id}",
             "Advertising Objective": "Sales",
             "Sales destination": "Website",
             "iOS 14 Dedicated Campaign": "Off",
