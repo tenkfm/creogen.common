@@ -1,5 +1,6 @@
 import io, csv
-from enum import Enum
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from datetime import datetime
 from typing import List, ClassVar, Optional
 from pydantic import BaseModel, Field
@@ -56,6 +57,42 @@ class TTExport(FirebaseObject):
             rows.append(row)
             
         return self.__generate_tiktok_csv(rows)
+    
+    def get_xlsx(self) -> bytes:
+        """
+        Генерация XLSX-файла в памяти по тем же данным, что и CSV.
+        Возвращает bytes для сохранения или отправки в HTTP-ответе.
+        """
+        rows = []
+        for i in range(self.ad_groups_count):
+            row = self.__generate_row(
+                ad_group_name=f"Ad Group {i + 1}",
+                ad_name=f"Ad_1",
+                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)]
+            )
+            rows.append(row)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "TikTok Bulk Upload"
+
+        # Заголовки
+        ws.append(self.ALL_FIELDS)
+
+        # Данные
+        for row in rows:
+            ws.append([row.get(field, "") for field in self.ALL_FIELDS])
+
+        # Автоширина столбцов
+        for col_idx, col_name in enumerate(self.ALL_FIELDS, 1):
+            max_len = max(len(str(col_name)), *(len(str(r.get(col_name, ""))) for r in rows))
+            ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 50)
+
+        # Сохраняем в память
+        output = io.BytesIO()
+        wb.save(output)
+        return output.getvalue()
+    
 
 
     def __generate_row(self, ad_group_name: str, ad_name: str, video_file_name: str):
