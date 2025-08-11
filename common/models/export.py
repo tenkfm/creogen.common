@@ -47,12 +47,14 @@ class TTExport(FirebaseObject):
     ]
     
     def get_csv(self) -> str:
+        bids = self._even_bids()
         rows = []
         for i in range(self.ad_groups_count):
             row = self.__generate_row(
                 ad_group_name=f"Ad Group {i + 1}",
-                ad_name=f"Ad_1",
-                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)]
+                ad_name=f"Ad_{i + 1}",
+                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
+                bid=bids[i]
             )
             rows.append(row)
             
@@ -63,12 +65,14 @@ class TTExport(FirebaseObject):
         Генерация XLSX-файла в памяти по тем же данным, что и CSV.
         Возвращает bytes для сохранения или отправки в HTTP-ответе.
         """
+        bids = self._even_bids()
         rows = []
         for i in range(self.ad_groups_count):
             row = self.__generate_row(
                 ad_group_name=f"Ad Group {i + 1}",
                 ad_name=f"Ad_1",
-                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)]
+                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
+                bid=bids[i]
             )
             rows.append(row)
 
@@ -93,9 +97,21 @@ class TTExport(FirebaseObject):
         wb.save(output)
         return output.getvalue()
     
+    
+    def _even_bids(self) -> List[float]:
+        # На случай если min/max перепутаны
+        bmin, bmax = sorted([float(self.bid_min), float(self.bid_max)])
+        n = int(self.ad_groups_count)
+        if n <= 0:
+            return []
+        # шаг так, чтобы первый = bmin, последний = bmax
+        denom = max(n - 1, 1)
+        step = (bmax - bmin) / denom
+        # при необходимости округляй до 2 знаков:
+        return [round(bmin + i * step, 2) for i in range(n)]
 
 
-    def __generate_row(self, ad_group_name: str, ad_name: str, video_file_name: str):
+    def __generate_row(self, ad_group_name: str, ad_name: str, video_file_name: str, bid: float):
         now_str = datetime.now().strftime("%Y/%m/%d %H:%M")
         return {
             "Campaign Status": "On",
@@ -144,7 +160,7 @@ class TTExport(FirebaseObject):
             "View-through window": "1-day view",
             "Event count": "Every",
             "Bid Strategy": "Cost Cap",
-            "Bid for oCPC/M": self.bid,
+            "Bid for oCPC/M": bid,
             "Delivery Type": "Standard",
             "Ad Status": "On",
             "Ad Name": ad_name,
@@ -184,7 +200,8 @@ class TTExport(FirebaseObject):
     locations: List[str]
     languages: List[str]
     budget: float
-    bid: float
+    bid_min: float
+    bid_max: float
     identity_id: str
     text: str
     url: str
