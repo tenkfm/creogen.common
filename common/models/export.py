@@ -118,20 +118,14 @@ class TTExport(FirebaseObject):
             rows.append(row)
 
         wb = load_workbook("./media/exports/tt_template.xlsx", data_only=False)  # сохраняем формулы/стили как есть
-        print(f"===EXPORT=== ./media/exports/tt_template.xlsx Loaded")
         ws: Worksheet = self._pick_sheet(wb, "Creogen")
-        print(f"===EXPORT=== Worksheet '{ws.title}' Loaded")
 
         header_row_idx, col_map = self._find_header_row_and_mapping(ws, self.ALL_FIELDS)
-
-        print(f"===EXPORT=== Header Row Index: {header_row_idx}")
-        print(f"===EXPORT=== Column Mapping: {col_map}")
 
         if header_row_idx is None:
             raise RuntimeError("Не найден ряд заголовков, соответствующий ALL_FIELDS, в шаблоне.")
 
         start_row = self._detect_first_append_row(ws, header_row_idx, key_col=col_map.get(self.ALL_FIELDS[0]))
-        print(f"===EXPORT=== start_row: {start_row}")
 
         # Пишем только значения, без изменений стилей
         r = start_row
