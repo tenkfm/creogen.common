@@ -1,5 +1,7 @@
 import io, csv
 from openpyxl import Workbook
+from openpyxl import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta
 from typing import List, ClassVar, Optional
@@ -97,6 +99,100 @@ class TTExport(FirebaseObject):
         output = io.BytesIO()
         wb.save(output)
         return output.getvalue()
+    
+    
+    def get_xlsx_from_template(self, sheet_name: Optional[str] = None) -> bytes:
+        """
+        Загружает XLSX-шаблон и дописывает в него строки данных под заголовками.
+        НЕ меняет структуру/стили шаблона. Возвращает bytes.
+        """
+        bids = self._even_bids()
+        rows = []
+        for i in range(self.ad_groups_count):
+            row = self.__generate_row(
+                ad_group_name=f"ADG_{i + 1}_{self.id}",
+                ad_name=f"AD_{i + 1}_{self.id}",
+                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
+                bid=bids[i]
+            )
+            rows.append(row)
+
+        wb = load_workbook("./media/exports/tt_template.xlsx", data_only=False)  # сохраняем формулы/стили как есть
+        ws: Worksheet = self._pick_sheet(wb, sheet_name)
+
+        header_row_idx, col_map = self._find_header_row_and_mapping(ws, self.ALL_FIELDS)
+        if header_row_idx is None:
+            raise RuntimeError("Не найден ряд заголовков, соответствующий ALL_FIELDS, в шаблоне.")
+
+        start_row = self._detect_first_append_row(ws, header_row_idx, key_col=col_map.get(self.ALL_FIELDS[0]))
+
+        # Пишем только значения, без изменений стилей
+        r = start_row
+        for row in rows:
+            for field, col_idx in col_map.items():
+                ws.cell(row=r, column=col_idx, value=row.get(field, ""))
+            r += 1
+
+        out = io.BytesIO()
+        wb.save(out)
+        return out.getvalue()
+
+    # -------------------- helpers --------------------
+
+    def _pick_sheet(self, wb, sheet_name: Optional[str]) -> Worksheet:
+        """Возвращает нужный лист: по имени, иначе первый лист."""
+        if sheet_name and sheet_name in wb.sheetnames:
+            return wb[sheet_name]
+        # если в шаблоне есть ожидаемое имя — возьми его
+        for name in wb.sheetnames:
+            if name.lower().startswith("tiktok") or "upload" in name.lower():
+                return wb[name]
+        return wb.active
+
+    def _find_header_row_and_mapping(self, ws: Worksheet, fields: List[str]) -> tuple[Optional[int], dict]:
+        """
+        Ищет строку заголовков, где совпадает максимум колонок из fields.
+        Возвращает (row_index, mapping field->col_index). Если не нашли — (None, {}).
+        """
+        best_row = None
+        best_map = {}
+        # ограничимся первыми 50 строками в поиске хедера
+        for row_idx in range(1, min(ws.max_row, 50) + 1):
+            values = [str(c.value).strip() if c.value is not None else "" for c in ws[row_idx]]
+            if not any(values):
+                continue
+            m: dict[str, int] = {}
+            for col_idx, val in enumerate(values, start=1):
+                if val in fields:
+                    m[val] = col_idx
+            # считаем качество совпадения
+            if len(m) > len(best_map):
+                best_map, best_row = m, row_idx
+                # ранний выход, если нашли все поля
+                if len(best_map) == len(fields):
+                    break
+
+        # Если нашли часть полей — это ок; писать будем только те, что есть в шаблоне.
+        return best_row, best_map
+
+    def _detect_first_append_row(self, ws: Worksheet, header_row_idx: int, key_col: Optional[int]) -> int:
+        """
+        Определяет, куда начинать дописывать:
+        - если под заголовком сразу пусто — начинаем с header_row+1
+        - если там уже есть данные — пишем с ws.max_row+1
+        """
+        if key_col is None:
+            # нет явной ключевой колонки, просто ниже максимальной занятой строки
+            return ws.max_row + 1
+
+        # Проверяем ближайшую строку после хедера
+        first_data_row = header_row_idx + 1
+        val = ws.cell(row=first_data_row, column=key_col).value
+        if val in (None, ""):
+            return first_data_row
+
+        # Иначе ищем первую пустую снизу (но проще — max_row + 1)
+        return ws.max_row + 1    
     
     
     def _even_bids(self) -> List[float]:
