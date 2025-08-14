@@ -136,7 +136,7 @@ class PublicationCreative(FirebaseObject):
     user_id: Optional[str] = None
     status: PublicationCreativeStatus = PublicationCreativeStatus.new
     error: Optional[str] = None
-    file_name: Optional[str]
+    file_name: Optional[str] = None
     
     @staticmethod
     def collection_name():
