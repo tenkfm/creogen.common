@@ -7,8 +7,9 @@ from common.services.firebase.firebase_object import FirebaseObject
 class Profile(FirebaseObject):
     id: Optional[str] = None
     email: str
-    heygen_api_key: str
-    
+    created_at: str
+    heygen_api_key: Optional[str] = None
+
     @staticmethod
     def collection_name():
         return "profiles"
