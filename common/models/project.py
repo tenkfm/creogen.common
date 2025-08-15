@@ -150,6 +150,7 @@ class Publication(FirebaseObject):
     ratio: PublicationRatio
     number_of_creos: int
     template: PublicationTemplate
+    comment: Optional[str] = None
     phase: PublicationPhase = PublicationPhase.new
     create_time: Optional[str] = None
     start_time: Optional[str] = None
