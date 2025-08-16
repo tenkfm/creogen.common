@@ -9,6 +9,7 @@ class Profile(FirebaseObject):
     email: str
     created_at: str
     heygen_api_key: Optional[str] = None
+    freepik_api_key: Optional[str] = None
 
     @staticmethod
     def collection_name():
