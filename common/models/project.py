@@ -34,7 +34,7 @@ class Asset(FirebaseObject):
 
     @staticmethod
     def generate_name(ext: str) -> str:
-        return f"{uuid.uuid4().hex}{ext}"
+        return f"{uuid.uuid4().hex}.{ext}"
 
     class Config:
         use_enum_values = True
