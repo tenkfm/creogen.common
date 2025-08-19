@@ -1,3 +1,4 @@
+import os, uuid
 from enum import Enum
 from datetime import datetime
 from typing import List, Optional, Dict
@@ -29,7 +30,11 @@ class Asset(FirebaseObject):
     name: str
     path: str
     type: AssetType
-    
+
+
+    def generate_name(self, ext: str) -> str:
+        return f"{uuid.uuid4().hex}{ext}"
+
     class Config:
         use_enum_values = True
     
