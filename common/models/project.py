@@ -100,6 +100,7 @@ class Reading(FirebaseObject):
     
 class PublicationPhase(str, Enum):
     new = "new"
+    planned = "planned"
     preparing_assets = "preparing_assets"
     generating = "generating"
     done = "done"
