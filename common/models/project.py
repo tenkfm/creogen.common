@@ -32,6 +32,7 @@ class Asset(FirebaseObject):
     type: AssetType
 
 
+    @staticmethod
     def generate_name(self, ext: str) -> str:
         return f"{uuid.uuid4().hex}{ext}"
 
