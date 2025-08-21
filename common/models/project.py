@@ -204,7 +204,8 @@ class Publication(FirebaseObject):
             create_time=datetime.now().isoformat(),
             configuration=self.configuration,
             assets=self.assets,
-            readings=self.readings
+            readings=self.readings,
+            chromakey=self.chromakey
         )
         
     @staticmethod
