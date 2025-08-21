@@ -1,4 +1,5 @@
 import io, csv
+from math import ceil
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -49,35 +50,12 @@ class TTExport(FirebaseObject):
         "TikTok offline events"
     ]
     
-    def get_csv(self) -> str:
-        bids = self._even_bids()
-        rows = []
-        for i in range(self.ad_groups_count):
-            row = self.__generate_row(
-                ad_group_name=f"ADG_{i + 1}_{self.id}",
-                ad_name=f"AD_{i + 1}_{self.id}",
-                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
-                bid=bids[i]
-            )
-            rows.append(row)
-            
-        return self.__generate_tiktok_csv(rows)
-    
     def get_xlsx(self) -> bytes:
         """
         Генерация XLSX-файла в памяти по тем же данным, что и CSV.
         Возвращает bytes для сохранения или отправки в HTTP-ответе.
         """
-        bids = self._even_bids()
-        rows = []
-        for i in range(self.ad_groups_count):
-            row = self.__generate_row(
-                ad_group_name=f"ADG_{i + 1}_{self.id}",
-                ad_name=f"AD_{i + 1}_{self.id}",
-                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
-                bid=bids[i]
-            )
-            rows.append(row)
+        rows = self._build_bulk_rows()
 
         wb = Workbook()
         ws = wb.active
@@ -90,15 +68,15 @@ class TTExport(FirebaseObject):
         for row in rows:
             ws.append([row.get(field, "") for field in self.ALL_FIELDS])
 
-        # Автоширина столбцов
+        # Автоширина
         for col_idx, col_name in enumerate(self.ALL_FIELDS, 1):
-            max_len = max(len(str(col_name)), *(len(str(r.get(col_name, ""))) for r in rows))
+            max_len = max(len(str(col_name)), *(len(str(r.get(col_name, ""))) for r in rows)) if rows else len(col_name)
             ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 50)
 
-        # Сохраняем в память
         output = io.BytesIO()
         wb.save(output)
         return output.getvalue()
+
     
     
     def get_xlsx_from_template(self, sheet_name: Optional[str] = None) -> bytes:
@@ -106,28 +84,17 @@ class TTExport(FirebaseObject):
         Загружает XLSX-шаблон и дописывает в него строки данных под заголовками.
         НЕ меняет структуру/стили шаблона. Возвращает bytes.
         """
-        bids = self._even_bids()
-        rows = []
-        for i in range(self.ad_groups_count):
-            row = self.__generate_row(
-                ad_group_name=f"ADG_{i + 1}_{self.id}",
-                ad_name=f"AD_{i + 1}_{self.id}",
-                video_file_name=self.file_names[i] if i < len(self.file_names) else self.file_names[i % len(self.file_names)],
-                bid=bids[i]
-            )
-            rows.append(row)
+        rows = self._build_bulk_rows()
 
-        wb = load_workbook("./media/exports/tt_template.xlsx", data_only=False)  # сохраняем формулы/стили как есть
+        wb = load_workbook("./media/exports/tt_template.xlsx", data_only=False)
         ws: Worksheet = self._pick_sheet(wb, "Creogen")
 
         header_row_idx, col_map = self._find_header_row_and_mapping(ws, self.ALL_FIELDS)
-
         if header_row_idx is None:
             raise RuntimeError("Не найден ряд заголовков, соответствующий ALL_FIELDS, в шаблоне.")
 
         start_row = self._detect_first_append_row(ws, header_row_idx, key_col=col_map.get(self.ALL_FIELDS[0]))
 
-        # Пишем только значения, без изменений стилей
         r = start_row
         for row in rows:
             for field, col_idx in col_map.items():
@@ -138,7 +105,27 @@ class TTExport(FirebaseObject):
         wb.save(out)
         return out.getvalue()
 
+
     # -------------------- helpers --------------------
+    
+    def _calc_groups(self) -> tuple[list[list[str]], int]:
+        """
+        Разбивает file_names по группам размера K=ad_creatives_in_adgroup_count.
+        Возвращает (список групп с файлами, N_actual).
+        """
+        files = list(self.file_names or [])
+        K = max(1, int(self.ad_creatives_in_adgroup_count))
+        if not files:
+            return [], 0
+        N_actual = ceil(len(files) / K)  # +1 если остаток
+        groups: list[list[str]] = []
+        for g in range(N_actual):
+            start = g * K
+            end = start + K
+            groups.append(files[start:end])
+        return groups, N_actual
+    
+    
 
     def _pick_sheet(self, wb, sheet_name: Optional[str]) -> Worksheet:
         """Возвращает нужный лист: по имени, иначе первый лист."""
@@ -196,17 +183,50 @@ class TTExport(FirebaseObject):
         return ws.max_row + 1    
     
     
-    def _even_bids(self) -> List[float]:
-        # На случай если min/max перепутаны
+    def _even_bids(self, n: int) -> List[float]:
+        """
+        Равномерно распределяет bid от [bid_min..bid_max] по n группам.
+        """
         bmin, bmax = sorted([float(self.bid_min), float(self.bid_max)])
-        n = int(self.ad_groups_count)
+        n = int(n)
         if n <= 0:
             return []
-        # шаг так, чтобы первый = bmin, последний = bmax
         denom = max(n - 1, 1)
         step = (bmax - bmin) / denom
-        # при необходимости округляй до 2 знаков:
         return [round(bmin + i * step, 2) for i in range(n)]
+    
+    
+    
+    def _build_bulk_rows(self) -> List[dict]:
+        """
+        1 : N(auto) : K, где
+        N(auto) = ceil(len(file_names)/K), K = ad_creatives_in_adgroup_count.
+        Последняя группа может быть короче.
+        """
+        groups, N_actual = self._calc_groups()
+        if N_actual == 0:
+            return []
+
+        bids = self._even_bids(N_actual)
+
+        rows: List[dict] = []
+        for g, files_in_group in enumerate(groups):
+            if not files_in_group:
+                continue
+            ad_group_name = f"ADG_{g + 1}_{self.id}"
+            bid = bids[g]
+            for j, vf in enumerate(files_in_group, start=1):
+                ad_name = f"AD_{g + 1}_{j}_{self.id}"
+                rows.append(
+                    self.__generate_row(
+                        ad_group_name=ad_group_name,
+                        ad_name=ad_name,
+                        video_file_name=vf,
+                        bid=bid
+                    )
+                )
+        return rows
+
 
 
     def __generate_row(self, ad_group_name: str, ad_name: str, video_file_name: str, bid: float):
@@ -298,7 +318,7 @@ class TTExport(FirebaseObject):
     user_id: Optional[str] = None
     publication_id: Optional[str] = None
     campaign_name: str
-    ad_groups_count: int
+    ad_creatives_in_adgroup_count: int
     pixel_id: str
     pixel_event: str
     locations: List[str]
