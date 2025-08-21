@@ -71,12 +71,13 @@ class ReadingStatus(str, Enum):
 
 class ReadingAvatarPlatform(str, Enum):
     heygen = "heygen"
-
+    elevenlabs = "elevenlabs"
+    
 
 class ReadingAvatarInfo(BaseModel):
     platform: ReadingAvatarPlatform = ReadingAvatarPlatform.heygen
-    avatar_id: str
-    voice_id: str = "2f72ee82b83d4b00af16c4771d611752" # Default voice ID
+    avatar_id: Optional[str] = None
+    voice_id: str
     avatar_name: Optional[str] = None
     preview_image_url: Optional[str] = None
     avatar_video_id: Optional[str] = None
