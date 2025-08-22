@@ -1,7 +1,8 @@
 import io, csv
+import random
+from urllib.parse import quote  # URL-encoding
 from math import ceil
-from openpyxl import Workbook
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta
@@ -12,6 +13,7 @@ from common.services.firebase.firebase_object import FirebaseObject
 
 
 class TTExport(FirebaseObject):
+
     ALL_FIELDS: ClassVar[List[str]] = [
         "Campaign ID", "Campaign Status", "Campaign Name", "Advertising Objective",
         "Campaign type", "Sales destination", "Use catalog", "Product source",
@@ -51,24 +53,16 @@ class TTExport(FirebaseObject):
     ]
     
     def get_xlsx(self) -> bytes:
-        """
-        Генерация XLSX-файла в памяти по тем же данным, что и CSV.
-        Возвращает bytes для сохранения или отправки в HTTP-ответе.
-        """
         rows = self._build_bulk_rows()
 
         wb = Workbook()
         ws = wb.active
         ws.title = "TikTok Bulk Upload"
 
-        # Заголовки
         ws.append(self.ALL_FIELDS)
-
-        # Данные
         for row in rows:
             ws.append([row.get(field, "") for field in self.ALL_FIELDS])
 
-        # Автоширина
         for col_idx, col_name in enumerate(self.ALL_FIELDS, 1):
             max_len = max(len(str(col_name)), *(len(str(r.get(col_name, ""))) for r in rows)) if rows else len(col_name)
             ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 50)
@@ -77,13 +71,7 @@ class TTExport(FirebaseObject):
         wb.save(output)
         return output.getvalue()
 
-    
-    
     def get_xlsx_from_template(self, sheet_name: Optional[str] = None) -> bytes:
-        """
-        Загружает XLSX-шаблон и дописывает в него строки данных под заголовками.
-        НЕ меняет структуру/стили шаблона. Возвращает bytes.
-        """
         rows = self._build_bulk_rows()
 
         wb = load_workbook("./media/exports/tt_template.xlsx", data_only=False)
@@ -105,46 +93,32 @@ class TTExport(FirebaseObject):
         wb.save(out)
         return out.getvalue()
 
-
     # -------------------- helpers --------------------
     
     def _calc_groups(self) -> tuple[list[list[str]], int]:
-        """
-        Разбивает file_names по группам размера K=ad_creatives_in_adgroup_count.
-        Возвращает (список групп с файлами, N_actual).
-        """
         files = list(self.file_names or [])
         K = max(1, int(self.ad_creatives_in_adgroup_count))
         if not files:
             return [], 0
-        N_actual = ceil(len(files) / K)  # +1 если остаток
+        N_actual = ceil(len(files) / K)
         groups: list[list[str]] = []
         for g in range(N_actual):
             start = g * K
             end = start + K
             groups.append(files[start:end])
         return groups, N_actual
-    
-    
 
     def _pick_sheet(self, wb, sheet_name: Optional[str]) -> Worksheet:
-        """Возвращает нужный лист: по имени, иначе первый лист."""
         if sheet_name and sheet_name in wb.sheetnames:
             return wb[sheet_name]
-        # если в шаблоне есть ожидаемое имя — возьми его
         for name in wb.sheetnames:
             if name.lower().startswith("tiktok") or "upload" in name.lower():
                 return wb[name]
         return wb.active
 
     def _find_header_row_and_mapping(self, ws: Worksheet, fields: List[str]) -> tuple[Optional[int], dict]:
-        """
-        Ищет строку заголовков, где совпадает максимум колонок из fields.
-        Возвращает (row_index, mapping field->col_index). Если не нашли — (None, {}).
-        """
         best_row = None
         best_map = {}
-        # ограничимся первыми 50 строками в поиске хедера
         for row_idx in range(1, min(ws.max_row, 50) + 1):
             values = [str(c.value).strip() if c.value is not None else "" for c in ws[row_idx]]
             if not any(values):
@@ -153,40 +127,22 @@ class TTExport(FirebaseObject):
             for col_idx, val in enumerate(values, start=1):
                 if val in fields:
                     m[val] = col_idx
-            # считаем качество совпадения
             if len(m) > len(best_map):
                 best_map, best_row = m, row_idx
-                # ранний выход, если нашли все поля
                 if len(best_map) == len(fields):
                     break
-
-        # Если нашли часть полей — это ок; писать будем только те, что есть в шаблоне.
         return best_row, best_map
 
     def _detect_first_append_row(self, ws: Worksheet, header_row_idx: int, key_col: Optional[int]) -> int:
-        """
-        Определяет, куда начинать дописывать:
-        - если под заголовком сразу пусто — начинаем с header_row+1
-        - если там уже есть данные — пишем с ws.max_row+1
-        """
         if key_col is None:
-            # нет явной ключевой колонки, просто ниже максимальной занятой строки
             return ws.max_row + 1
-
-        # Проверяем ближайшую строку после хедера
         first_data_row = header_row_idx + 1
         val = ws.cell(row=first_data_row, column=key_col).value
         if val in (None, ""):
             return first_data_row
-
-        # Иначе ищем первую пустую снизу (но проще — max_row + 1)
         return ws.max_row + 1    
     
-    
     def _even_bids(self, n: int) -> List[float]:
-        """
-        Равномерно распределяет bid от [bid_min..bid_max] по n группам.
-        """
         bmin, bmax = sorted([float(self.bid_min), float(self.bid_max)])
         n = int(n)
         if n <= 0:
@@ -195,14 +151,18 @@ class TTExport(FirebaseObject):
         step = (bmax - bmin) / denom
         return [round(bmin + i * step, 2) for i in range(n)]
     
-    
-    
+    def _pick_title_pair(self) -> tuple[str, str]:
+        """
+        Возвращает (raw_title, encoded_title).
+        Если ad_titles пуст — оба пустые.
+        """
+        if not self.ad_titles:
+            return "", ""
+        raw = str(random.choice(self.ad_titles))   # равновероятный выбор
+        enc = quote(raw, safe="")                  # percent-encoding для URL
+        return raw, enc
+
     def _build_bulk_rows(self) -> List[dict]:
-        """
-        1 : N(auto) : K, где
-        N(auto) = ceil(len(file_names)/K), K = ad_creatives_in_adgroup_count.
-        Последняя группа может быть короче.
-        """
         groups, N_actual = self._calc_groups()
         if N_actual == 0:
             return []
@@ -227,10 +187,17 @@ class TTExport(FirebaseObject):
                 )
         return rows
 
-
-
     def __generate_row(self, ad_group_name: str, ad_name: str, video_file_name: str, bid: float):
         now_str = (datetime.now() - timedelta(days=1)).strftime("%Y/%m/%d %H:%M")
+
+        # Берём титул: сырой и закодированный (один и тот же для строки)
+        raw_title, encoded_title = self._pick_title_pair()
+
+        # Подставляем в URL, если есть плейсхолдер
+        final_url = self.url
+        if isinstance(final_url, str) and "YYYYYYY" in final_url and encoded_title:
+            final_url = final_url.replace("YYYYYYY", encoded_title)
+
         return {
             "Campaign Status": "On",
             "Campaign Name": f"{self.campaign_name}-{self.id}",
@@ -287,34 +254,33 @@ class TTExport(FirebaseObject):
             "Identity ID": self.identity_id,
             "Ad format": "Single video",
             "Video Name": video_file_name,
-            "Text": self.text,
+            "Text": raw_title,
             "Call to action type": "Standard",
             "Call to Action": "Learn More",
-            "Web URL": self.url,
+            "Playable ID": "",
+            "Auto Ad - Image Name": "",
+            "Auto Ad - Video Name": "",
+            "Auto Ad - Text": "",
+            "Auto ad - call to action type": "",
+            "Auto Ad - Call to Action": "",
+            "Website type": "",
+            "Web URL": final_url,
+            "Deeplink type": "",
+            "Deeplink URL": "",
+            "Fallback Type": "",
+            "Fallback Website URL": "",
+            "Impression Tracking URL": "",
+            "Click Tracking URL": "",
             "TikTok website events": self.event_name,
+            "TikTok app events": "",
+            "TikTok offline events": ""
         }
         
-        
     def _fmt_dot(self, x: float, places: int = 2) -> str:
-        # Делаем округление через Decimal и возвращаем строку вида 0.15 (всегда с точкой)
         q = Decimal(str(x)).quantize(Decimal(10) ** -places, rounding=ROUND_HALF_UP)
         return format(q, f".{places}f")
     
-    def __generate_tiktok_csv(self, rows) -> str:
-        """
-        rows: list of dicts, где ключи — это те же самые имена колонок из ALL_FIELDS,
-              а значения — строки, которые нужно записать.
-        Возвращает строку с содержимым CSV (UTF-8 с BOM).
-        """
-        output = io.StringIO()
-        output.write('\ufeff')
-        writer = csv.DictWriter(output, fieldnames=self.ALL_FIELDS, delimiter=';')
-        writer.writeheader()
-        for row in rows:
-            writer.writerow({field: row.get(field, "") for field in self.ALL_FIELDS})
-        return output.getvalue()
-    
-    
+    # -------- поля модели --------
     user_id: Optional[str] = None
     publication_id: Optional[str] = None
     campaign_name: str
@@ -327,12 +293,12 @@ class TTExport(FirebaseObject):
     bid_min: float
     bid_max: float
     identity_id: str
-    text: str
+    text: Optional[str] = None  # Deprecated
     url: str
     event_name: str
     file_names: List[str] = Field(default_factory=list)
-    
-    
+    ad_titles: List[str] = Field(default_factory=list)
+
     @staticmethod
     def collection_name():
         return "tt_exports"
