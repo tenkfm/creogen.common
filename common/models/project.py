@@ -28,8 +28,14 @@ class Asset(FirebaseObject):
     user_id: Optional[str] = None
     project_id: Optional[str] = None
     name: str
-    path: str
     type: AssetType
+    path: str
+    url: str
+    content_type: str
+    size: float
+    thumbnail_url: Optional[str] = None
+    thumbnail_path: Optional[str] = None
+    metadata: Optional[dict] = None
 
 
     @staticmethod
