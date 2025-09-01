@@ -250,7 +250,7 @@ class PublicationStatus(BaseModel):
             return 1.0
 
         # Общий случай: суммируем вклад по каждому креативу
-        total = self.creatives_total or 1
+        total = (self.creatives_total or 1) * 0.9
         weight = 1.0 / total
         contrib = 0.0
 
