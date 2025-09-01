@@ -19,6 +19,7 @@ class AssetType(str, Enum):
     image = "image"
     video = "video"
     audio = "audio"
+    zip = "zip"
     video_reading = "video_reading"
     audio_reading = "audio_reading"
     ass_subtitles = "ass_subtitles"
