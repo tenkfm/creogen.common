@@ -9,6 +9,7 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 from common.services.firebase.firebase_service_exception import FirebaseServiceException
 from common.services.firebase.firebase_service_interface import FirebaseServiceInterface
 from common.services.firebase.firebase_object import FirebaseObject
+from common.services.firebase.firebase_client import get_client
 
 # ==== Глобальные синглтоны (на ПРОЦЕСС) ======================================
 # Один firebase_app и один(и) firestore client на database_id для текущего процесса воркера.
@@ -33,21 +34,8 @@ def _ensure_firebase_app(api_key: str) -> None:
             firebase_admin.initialize_app(cred)
         _firebase_app_inited = True
 
-def _get_db(database_id: str) -> firestore.Client:
-    """
-    Вернуть/создать один firestore client на процесс и database_id.
-    """
-    if database_id in _db_by_id:
-        return _db_by_id[database_id]
-    with _init_lock:
-        cli = _db_by_id.get(database_id)
-        if cli is not None:
-            return cli
-        cli = firestore.client(database_id=database_id)
-        _db_by_id[database_id] = cli
-        return cli
-# =============================================================================
 
+# =============================================================================
 
 # Firebase service implementation
 class FirebaseService(FirebaseServiceInterface):
@@ -55,7 +43,7 @@ class FirebaseService(FirebaseServiceInterface):
         # Инициализируем firebase_admin ОДИН раз и берём общий client для процесса
         _ensure_firebase_app(api_key=api_key)
         self.database_id = database_id
-        self.db = _get_db(database_id=database_id)
+        self.db = get_client(api_key=api_key, database_id=database_id)
 
     # ---- CRUD ---------------------------------------------------------------
 
