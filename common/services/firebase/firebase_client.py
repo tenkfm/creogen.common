@@ -22,7 +22,7 @@ def get_client(api_key: str | None = None, database_id: str | None = None) -> Fi
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred)
 
-    _client = firestore.client(database=database_id)
+    _client = firestore.client(database_id=database_id)
     return _client
 
 
