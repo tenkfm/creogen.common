@@ -132,15 +132,22 @@ class HeygenVideoStatusResponse(BaseModel):
     data: HeygenVideoStatusData
     message: str
 
+{'event_type': 'avatar_video.fail', 'event_data': {'callback_id': None, 'video_id': '0ede950c775b40398b91a04536119eb2', 'msg': 'This instant avatar is under review: None'}}
 
 # Webhook Event
 class EventData(BaseModel):
+    callback_id: Optional[str] = None
+    msg: Optional[str] = None
     video_id: str
-    url: str
+    
+    url: Optional[str] = None
     gif_download_url: Optional[str] = None
     video_share_page_url: Optional[str] = None
     folder_id: Optional[str] = None
-    callback_id: Optional[str] = None
+    
+    class Config:
+        extra = "ignore"
+    
 
 class HeygenEvent(BaseModel):
     event_type: str
