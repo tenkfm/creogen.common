@@ -131,3 +131,17 @@ class HeygenVideoStatusResponse(BaseModel):
     code: int
     data: HeygenVideoStatusData
     message: str
+
+
+# Webhook Event
+class EventData(BaseModel):
+    video_id: str
+    url: str
+    gif_download_url: Optional[str] = None
+    video_share_page_url: Optional[str] = None
+    folder_id: Optional[str] = None
+    callback_id: Optional[str] = None
+
+class HeygenEvent(BaseModel):
+    event_type: str
+    event_data: EventData

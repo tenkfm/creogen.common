@@ -24,7 +24,6 @@ class OpenAIService(OpenaiServiceInterface):
         return chat_completion.choices[0].message.content
 
 
-
     async def translate_script(self, content: str, target_language: str) -> str:
         system = f"""
 Translate the following text into {target_language} while preserving the original meaning and context.
